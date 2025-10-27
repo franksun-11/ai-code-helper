@@ -1,1 +1,11 @@
-spring.application.name=ai-code-helper
+spring:
+  application:
+    name: ai-code-helper
+  profiles:
+    active: local
+
+langchain4j:
+  github-models:
+    chat-model:
+      api-key: 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
+      model-name: gpt-4o
