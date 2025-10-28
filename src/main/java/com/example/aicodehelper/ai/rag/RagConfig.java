@@ -25,7 +25,7 @@ public class RagConfig {
     private EmbeddingModel githubEmbeddingModel;
 
     @Resource
-    private EmbeddingStore<TextSegment> embeddingStore;
+    private EmbeddingStore<TextSegment>  embeddingStore;
 
     @Bean
     public ContentRetriever contentRetriever() {
