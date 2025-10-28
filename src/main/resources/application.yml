@@ -8,7 +8,9 @@ langchain4j:
   github-models:
     chat-model:
       api-key: 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
-      model-name: gpt-4o
+      model-name: gpt-4o-mini
     embedding-model:
       api-key: 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
       model-name: text-embedding-3-small
+bigmodel:
+  api-key: 1cadadddaed84763b402d59527765012.tyq9OQfwDwm7gq85

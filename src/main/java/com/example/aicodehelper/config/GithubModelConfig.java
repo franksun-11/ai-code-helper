@@ -1,6 +1,6 @@
 package com.example.aicodehelper.config;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.github.GitHubModelsChatModel;
 import dev.langchain4j.model.github.GitHubModelsEmbeddingModel;
@@ -21,7 +21,7 @@ public class GithubModelConfig {
     private String embeddingModelName;
 
     @Bean
-    public ChatLanguageModel GithubChatModel() {
+    public ChatModel GithubChatModel() {
         if (githubToken == null || githubToken.isEmpty()) {
             throw new IllegalStateException("GitHub Token 未设置!请在环境变量中设置 GITHUB_TOKEN");
         }

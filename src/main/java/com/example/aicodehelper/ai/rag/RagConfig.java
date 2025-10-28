@@ -52,7 +52,7 @@ public class RagConfig {
         EmbeddingStoreContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingModel(githubEmbeddingModel)
                 .embeddingStore(embeddingStore)
-                .maxResults(5) // 最多返回5个相关内容
+                .maxResults(2) // 最多返回2个相关内容 (减少token使用)
                 .minScore(0.75) // 过滤掉分数低于0.75的内容
                 .build();
         return contentRetriever;
