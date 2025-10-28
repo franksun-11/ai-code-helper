@@ -44,8 +44,9 @@ class McpConfigTest {
     @Test
     void testNoClassDefFoundErrorDoesNotOccur() {
         // This test will fail at context load time if IllegalConfigurationException 
-        // is imported from the wrong package (dev.langchain4j.service instead of dev.langchain4j.exception)
-        // If we reach this point, it means the context loaded successfully and the fix is working
+        // is imported from the WRONG package (dev.langchain4j.service) instead of 
+        // the CORRECT package (dev.langchain4j.exception).
+        // If we reach this point, it means the context loaded successfully and the fix is working.
         assertNotNull(applicationContext,
                 "If this assertion passes, it means NoClassDefFoundError did not occur");
     }

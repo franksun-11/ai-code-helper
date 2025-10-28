@@ -8,8 +8,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit test for McpConfig that doesn't require full Spring context.
  * 
- * This test verifies that the NoClassDefFoundError for 
+ * This test verifies that the NoClassDefFoundError for the INCORRECT package
  * dev.langchain4j.service.IllegalConfigurationException does not occur.
+ * 
+ * The correct package is: dev.langchain4j.exception.IllegalConfigurationException
  */
 class McpConfigUnitTest {
 
