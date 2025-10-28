@@ -9,3 +9,6 @@ langchain4j:
     chat-model:
       api-key: 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
       model-name: gpt-4o
+    embedding-model:
+      api-key: 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
+      model-name: text-embedding-3-small
