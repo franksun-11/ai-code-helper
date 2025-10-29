@@ -1,9 +1,11 @@
 package com.example.aicodehelper.config;
 
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.github.GitHubModelsChatModel;
 import dev.langchain4j.model.github.GitHubModelsEmbeddingModel;
+import dev.langchain4j.model.github.GitHubModelsStreamingChatModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +44,19 @@ public class GithubModelConfig {
         return GitHubModelsEmbeddingModel.builder()
                 .gitHubToken(githubToken)
                 .modelName(embeddingModelName)
+                .logRequestsAndResponses(true)
+                .build();
+    }
+
+    @Bean
+    public StreamingChatModel GithubStreamingChatModel() {
+        if (githubToken == null || githubToken.isEmpty()) {
+            throw new IllegalStateException("GitHub Token 未设置!请在环境变量中设置 GITHUB_TOKEN");
+        }
+
+        return GitHubModelsStreamingChatModel.builder()
+                .gitHubToken(githubToken)
+                .modelName(modelName)
                 .logRequestsAndResponses(true)
                 .build();
     }

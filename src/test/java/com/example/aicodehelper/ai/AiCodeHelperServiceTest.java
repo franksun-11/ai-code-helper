@@ -56,7 +56,7 @@ class AiCodeHelperServiceTest {
 
     @Test
     void chatWithGuardRail() {
-        String result = aiCodeHelperService.chat(1, "to kill a mocking bird的作者是谁?");
+        String result = aiCodeHelperService.chat(1, "Lee Remick在中国的知名度?");
         System.out.println(result);
     }
 
