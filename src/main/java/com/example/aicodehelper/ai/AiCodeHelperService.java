@@ -1,12 +1,15 @@
 package com.example.aicodehelper.ai;
 
+import com.example.aicodehelper.ai.guardrail.SafeInputGuardRail;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.Result;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.guardrail.InputGuardrails;
 
 import java.util.List;
 
+@InputGuardrails(SafeInputGuardRail.class)
 public interface AiCodeHelperService {
     @SystemMessage("fromResource = 'system-prompt.txt'")
     String chat(@MemoryId int memoryId, @UserMessage String userMessage);
