@@ -31,21 +31,15 @@ export function chatWithSSE(memoryId, message, onMessage, onError, onComplete) {
   
   eventSource.onmessage = (event) => {
     try {
-      let data = event.data
-      if (data) {
-        // Spring Boot ServerSentEvent may wrap the data in quotes, so we need to parse it
-        // Also handle potential JSON string escaping
-        if (data.startsWith('"') && data.endsWith('"')) {
-          data = JSON.parse(data)
-        }
+      const data = event.data
+      console.log('Raw event.data:', JSON.stringify(data), '(length:', data.length + ')')
+
+      if (data !== null && data !== undefined) {
+        // Backend sends TEXT_PLAIN, so event.data is the raw string with spaces preserved
         onMessage(data)
       }
     } catch (error) {
-      console.error('Error parsing SSE message:', error, 'Raw data:', event.data)
-      // If parsing fails, just use the raw data
-      if (event.data) {
-        onMessage(event.data)
-      }
+      console.error('Error processing SSE message:', error)
     }
   }
   
