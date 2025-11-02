@@ -82,7 +82,7 @@ import { marked } from 'marked'
 import 'highlight.js/styles/atom-one-dark.css'
 import hljs from 'highlight.js'
 
-// Configure marked
+// Configure marked with simple settings
 marked.setOptions({
   highlight: function(code, lang) {
     if (lang && hljs.getLanguage(lang)) {
@@ -92,48 +92,44 @@ marked.setOptions({
     }
     return hljs.highlightAuto(code).value
   },
-  breaks: true, // 支持单个换行
-  gfm: true, // GitHub Flavored Markdown
-  pedantic: false, // 不使用严格的Markdown语法
-  headerIds: false, // 禁用header IDs
-  mangle: false // 不混淆邮箱地址
+  breaks: true,
+  gfm: true,
+  headerIds: false,
+  mangle: false
 })
 
 const { t, setLocale, getLocale } = useI18n()
 const currentLocale = ref(getLocale())
 
-// Markdown渲染函数
+// Simple markdown rendering function
 const renderMarkdown = (content) => {
   if (!content) return ''
   try {
-    // 预处理：确保Markdown标记前后有正确的格式
+    // Simple preprocessing to ensure proper markdown formatting
     let processed = content
-      // 修复粗体标记：移除** 和 **之间多余的空格 (包括单边空格情况)
-      // ** text **, ** text**, **text **, ** text** -> **text**
-      .replace(/\*\* *([^\*]+?) *\*\*/g, '**$1**')
-      // 在### 标题前添加两个换行（如果前面不是换行的话）
-      .replace(/([^\n])(###+ )/g, '$1\n\n$2')
-      // 在### 标题后添加换行
-      .replace(/(###+ [^\n]+)([^\n])/g, '$1\n$2')
-      // 确保列表项前有换行
-      .replace(/([^\n])(\n[0-9]+\. )/g, '$1\n$2')
-      .replace(/([^\n])(\n- )/g, '$1\n$2')
-      // 修复代码块：` ` 修复为 ```
-      .replace(/` `/g, '`')
-      // 确保代码块标记独占一行
-      .replace(/([^\n`])(```)/g, '$1\n$2')
-      .replace(/(```[a-z]*)\n/g, '\n$1\n')
+      // Fix bold: remove extra spaces around **
+      .replace(/\*\*\s+/g, '**')
+      .replace(/\s+\*\*/g, '**')
+      // Ensure headers have proper line breaks
+      .replace(/([^\n])(#{1,6}\s)/g, '$1\n\n$2')
+      .replace(/(#{1,6}\s[^\n]+)([^\n])/g, '$1\n\n$2')
+      // AGGRESSIVE: Split numbered lists even if they're in the same paragraph
+      // This handles: "1.item 2.item 3.item" -> "1.item\n2.item\n3.item"
+      .replace(/(\d+\.)/g, '\n$1')
+      // AGGRESSIVE: Split bullet lists 
+      .replace(/([-•]\s)/g, '\n$1')
+      // Clean up: remove multiple consecutive newlines (max 2)
+      .replace(/\n{3,}/g, '\n\n')
+      // Ensure proper spacing before first list item
+      .replace(/([^\n])(\n\d+\.)/g, '$1\n\n$2')
+      .replace(/([^\n])(\n[-•]\s)/g, '$1\n\n$2')
 
-    console.log('Original (100 chars):', content.substring(0, 100))
-    console.log('Processed (100 chars):', processed.substring(0, 100))
-
-    // marked v12+ uses marked.parse(), older versions use marked()
     const result = marked.parse ? marked.parse(processed) : marked(processed)
-    console.log('HTML (200 chars):', result.substring(0, 200))
     return result
   } catch (error) {
     console.error('Markdown render error:', error)
-    return content
+    // Fallback: convert line breaks to <br>
+    return content.replace(/\n/g, '<br>')
   }
 }
 
@@ -202,9 +198,7 @@ const sendMessage = async () => {
       message,
       // onMessage - 接收数据块
       (chunk) => {
-        console.log('Received chunk in ChatRoom:', JSON.stringify(chunk), 'Length:', chunk.length)
         messages.value[aiMessageIndex].content += chunk
-        console.log('Current message content:', JSON.stringify(messages.value[aiMessageIndex].content))
         scrollToBottom()
       },
       // onError
@@ -514,10 +508,10 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Markdown样式 */
+/* Simple Markdown Styles - Like ChatGPT */
 .message-bubble :deep(p) {
-  margin: 0.8em 0;
-  line-height: 1.8;
+  margin: 0.5em 0;
+  line-height: 1.7;
 }
 
 .message-bubble :deep(p:first-child) {
@@ -528,17 +522,59 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-/* 加粗文本 - 简单粗体像ChatGPT */
+/* Add spacing between paragraphs and lists */
+.message-bubble :deep(p + ul),
+.message-bubble :deep(p + ol) {
+  margin-top: 0.8em;
+}
+
+.message-bubble :deep(ul + p),
+.message-bubble :deep(ol + p) {
+  margin-top: 0.8em;
+}
+
+/* Bold text - Simple and clean */
 .message-bubble :deep(strong) {
-  color: #fff;
   font-weight: 700;
+  color: #fff;
 }
 
 .message-bubble :deep(em) {
   font-style: italic;
-  color: #c9d1d9;
 }
 
+/* Headers - Simple with just bold and size */
+.message-bubble :deep(h1),
+.message-bubble :deep(h2),
+.message-bubble :deep(h3),
+.message-bubble :deep(h4),
+.message-bubble :deep(h5),
+.message-bubble :deep(h6) {
+  font-weight: 700;
+  color: #fff;
+  margin: 1em 0 0.5em 0;
+  line-height: 1.3;
+}
+
+.message-bubble :deep(h1) {
+  font-size: 1.5em;
+}
+
+.message-bubble :deep(h2) {
+  font-size: 1.3em;
+}
+
+.message-bubble :deep(h3) {
+  font-size: 1.15em;
+}
+
+.message-bubble :deep(h4),
+.message-bubble :deep(h5),
+.message-bubble :deep(h6) {
+  font-size: 1.05em;
+}
+
+/* Code */
 .message-bubble :deep(code) {
   background: #1e1e1e;
   padding: 2px 6px;
@@ -565,16 +601,28 @@ onMounted(() => {
   line-height: 1.5;
 }
 
+/* Lists */
 .message-bubble :deep(ul),
 .message-bubble :deep(ol) {
-  margin: 8px 0;
+  margin: 12px 0;
   padding-left: 24px;
+  line-height: 1.8;
 }
 
 .message-bubble :deep(li) {
-  margin: 4px 0;
+  margin: 6px 0;
+  display: list-item;
 }
 
+.message-bubble :deep(ol) {
+  list-style-type: decimal;
+}
+
+.message-bubble :deep(ul) {
+  list-style-type: disc;
+}
+
+/* Blockquotes */
 .message-bubble :deep(blockquote) {
   border-left: 3px solid #667eea;
   padding-left: 12px;
@@ -583,6 +631,7 @@ onMounted(() => {
   font-style: italic;
 }
 
+/* Links */
 .message-bubble :deep(a) {
   color: #4a90e2;
   text-decoration: none;
@@ -592,50 +641,14 @@ onMounted(() => {
   text-decoration: underline;
 }
 
-/* 标题样式 - 更明显 */
-.message-bubble :deep(h1),
-.message-bubble :deep(h2),
-.message-bubble :deep(h3),
-.message-bubble :deep(h4),
-.message-bubble :deep(h5),
-.message-bubble :deep(h6) {
-  display: block;
-  margin: 16px 0 12px 0;
-  padding: 8px 12px;
-  font-weight: 700;
-  color: #fff;
-  background: rgba(102, 126, 234, 0.15);
-  border-left: 4px solid #667eea;
-  border-radius: 4px;
-}
-
-.message-bubble :deep(h1) {
-  font-size: 1.6em;
-  border-left-width: 5px;
-}
-
-.message-bubble :deep(h2) {
-  font-size: 1.4em;
-  border-left-width: 4px;
-}
-
-.message-bubble :deep(h3) {
-  font-size: 1.2em;
-  border-left-width: 3px;
-}
-
-.message-bubble :deep(h4),
-.message-bubble :deep(h5),
-.message-bubble :deep(h6) {
-  font-size: 1.05em;
-}
-
+/* Horizontal rule */
 .message-bubble :deep(hr) {
   border: none;
   border-top: 1px solid #444;
   margin: 12px 0;
 }
 
+/* Tables */
 .message-bubble :deep(table) {
   border-collapse: collapse;
   width: 100%;
@@ -654,4 +667,3 @@ onMounted(() => {
   font-weight: 600;
 }
 </style>
-
