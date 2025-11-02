@@ -33,7 +33,7 @@
       >
         <div v-if="msg.role === 'ai'" class="message-avatar ai-avatar">AI</div>
         <div class="message-content">
-          <div class="message-bubble">{{ msg.content }}</div>
+          <div class="message-bubble markdown-content" v-html="renderMarkdown(msg.content)"></div>
           <div class="message-time">{{ msg.time }}</div>
         </div>
         <div v-if="msg.role === 'user'" class="message-avatar user-avatar">
@@ -78,9 +78,64 @@
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useI18n } from '../i18n'
 import { chatWithSSE, getMemoryId } from '../services/api'
+import { marked } from 'marked'
+import 'highlight.js/styles/atom-one-dark.css'
+import hljs from 'highlight.js'
+
+// Configure marked
+marked.setOptions({
+  highlight: function(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return hljs.highlight(code, { language: lang }).value
+      } catch (err) {}
+    }
+    return hljs.highlightAuto(code).value
+  },
+  breaks: true, // 支持单个换行
+  gfm: true, // GitHub Flavored Markdown
+  pedantic: false, // 不使用严格的Markdown语法
+  headerIds: false, // 禁用header IDs
+  mangle: false // 不混淆邮箱地址
+})
 
 const { t, setLocale, getLocale } = useI18n()
 const currentLocale = ref(getLocale())
+
+// Markdown渲染函数
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  try {
+    // 预处理：确保Markdown标记前后有正确的格式
+    let processed = content
+      // 修复粗体标记：移除** 和 **之间多余的空格 (包括单边空格情况)
+      // ** text **, ** text**, **text **, ** text** -> **text**
+      .replace(/\*\* *([^\*]+?) *\*\*/g, '**$1**')
+      // 在### 标题前添加两个换行（如果前面不是换行的话）
+      .replace(/([^\n])(###+ )/g, '$1\n\n$2')
+      // 在### 标题后添加换行
+      .replace(/(###+ [^\n]+)([^\n])/g, '$1\n$2')
+      // 确保列表项前有换行
+      .replace(/([^\n])(\n[0-9]+\. )/g, '$1\n$2')
+      .replace(/([^\n])(\n- )/g, '$1\n$2')
+      // 修复代码块：` ` 修复为 ```
+      .replace(/` `/g, '`')
+      // 确保代码块标记独占一行
+      .replace(/([^\n`])(```)/g, '$1\n$2')
+      .replace(/(```[a-z]*)\n/g, '\n$1\n')
+
+    console.log('Original (100 chars):', content.substring(0, 100))
+    console.log('Processed (100 chars):', processed.substring(0, 100))
+
+    // marked v12+ uses marked.parse(), older versions use marked()
+    const result = marked.parse ? marked.parse(processed) : marked(processed)
+    console.log('HTML (200 chars):', result.substring(0, 200))
+    return result
+  } catch (error) {
+    console.error('Markdown render error:', error)
+    return content
+  }
+}
 
 const messages = ref([])
 const inputMessage = ref('')
@@ -333,7 +388,11 @@ onMounted(() => {
   border-radius: 8px;
   line-height: 1.6;
   word-wrap: break-word;
-  white-space: pre-wrap;
+}
+
+/* Markdown content should render normally */
+.message-bubble.markdown-content {
+  white-space: normal;
 }
 
 .ai-message .message-bubble {
@@ -453,6 +512,146 @@ onMounted(() => {
 .chat-input button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Markdown样式 */
+.message-bubble :deep(p) {
+  margin: 0.8em 0;
+  line-height: 1.8;
+}
+
+.message-bubble :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.message-bubble :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* 加粗文本 - 简单粗体像ChatGPT */
+.message-bubble :deep(strong) {
+  color: #fff;
+  font-weight: 700;
+}
+
+.message-bubble :deep(em) {
+  font-style: italic;
+  color: #c9d1d9;
+}
+
+.message-bubble :deep(code) {
+  background: #1e1e1e;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #e06c75;
+}
+
+.message-bubble :deep(pre) {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.message-bubble :deep(pre code) {
+  background: none;
+  padding: 0;
+  color: #abb2bf;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.message-bubble :deep(ul),
+.message-bubble :deep(ol) {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.message-bubble :deep(li) {
+  margin: 4px 0;
+}
+
+.message-bubble :deep(blockquote) {
+  border-left: 3px solid #667eea;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #8c8c8c;
+  font-style: italic;
+}
+
+.message-bubble :deep(a) {
+  color: #4a90e2;
+  text-decoration: none;
+}
+
+.message-bubble :deep(a:hover) {
+  text-decoration: underline;
+}
+
+/* 标题样式 - 更明显 */
+.message-bubble :deep(h1),
+.message-bubble :deep(h2),
+.message-bubble :deep(h3),
+.message-bubble :deep(h4),
+.message-bubble :deep(h5),
+.message-bubble :deep(h6) {
+  display: block;
+  margin: 16px 0 12px 0;
+  padding: 8px 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(102, 126, 234, 0.15);
+  border-left: 4px solid #667eea;
+  border-radius: 4px;
+}
+
+.message-bubble :deep(h1) {
+  font-size: 1.6em;
+  border-left-width: 5px;
+}
+
+.message-bubble :deep(h2) {
+  font-size: 1.4em;
+  border-left-width: 4px;
+}
+
+.message-bubble :deep(h3) {
+  font-size: 1.2em;
+  border-left-width: 3px;
+}
+
+.message-bubble :deep(h4),
+.message-bubble :deep(h5),
+.message-bubble :deep(h6) {
+  font-size: 1.05em;
+}
+
+.message-bubble :deep(hr) {
+  border: none;
+  border-top: 1px solid #444;
+  margin: 12px 0;
+}
+
+.message-bubble :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.message-bubble :deep(table th),
+.message-bubble :deep(table td) {
+  border: 1px solid #444;
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.message-bubble :deep(table th) {
+  background: #3c3f41;
+  font-weight: 600;
 }
 </style>
 
