@@ -10,15 +10,15 @@ server:
 langchain4j:
   github-models:
     chat-model:
-      api-key: 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
+      api-key: 
       model-name: gpt-4o-mini
       log-requests: true
       log-responses: true
     embedding-model:
-      api-key: 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
+      api-key: 
       model-name: text-embedding-3-small
     streaming-chat-model:
-      api-key: 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
+      api-key: 
       model-name: gpt-4o-mini
   open-ai:
     chat-model:
@@ -26,7 +26,7 @@ langchain4j:
       log-responses: true
 
 bigmodel:
-  api-key: 1cadadddaed84763b402d59527765012.tyq9OQfwDwm7gq85
+  api-key: 
 logging:
   level:
     dev.langchain4j: DEBUG
