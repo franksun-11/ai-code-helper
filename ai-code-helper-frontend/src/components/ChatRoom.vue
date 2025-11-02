@@ -147,7 +147,9 @@ const sendMessage = async () => {
       message,
       // onMessage - 接收数据块
       (chunk) => {
+        console.log('Received chunk in ChatRoom:', JSON.stringify(chunk), 'Length:', chunk.length)
         messages.value[aiMessageIndex].content += chunk
+        console.log('Current message content:', JSON.stringify(messages.value[aiMessageIndex].content))
         scrollToBottom()
       },
       // onError

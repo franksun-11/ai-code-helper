@@ -37,26 +37,31 @@ public class AiController {
                                     return;
                                 }
 
-                                String processedChunk = chunk;
+                                // Trim the chunk first because SSE will trim it anyway
+                                String trimmedChunk = chunk.trim();
+                                String processedChunk = trimmedChunk;
 
-                                // Add space before non-first, non-punctuation chunks
-                                // But DON'T add space before Chinese/Japanese/Korean characters
-                                if (!isFirst.get() && !chunk.startsWith(" ") &&
-                                    !isPunctuation(chunk.charAt(0)) &&
-                                    !isCJK(chunk.charAt(0))) {
-                                    processedChunk = " " + chunk;
-                                    log.debug("Added space: [{}] -> [{}]", chunk, processedChunk);
+                                // Determine if we need to add a space before this chunk
+                                // Add space if NOT first AND NOT punctuation AND NOT CJK
+                                if (!isFirst.get() && !trimmedChunk.isEmpty()) {
+                                    char firstChar = trimmedChunk.charAt(0);
+
+                                    if (!isPunctuation(firstChar) && !isCJK(firstChar)) {
+                                        processedChunk = " " + trimmedChunk;
+                                        log.debug("Added space: [{}] -> [{}]", trimmedChunk, processedChunk);
+                                    } else {
+                                        log.debug("No space needed for: [{}]", trimmedChunk);
+                                    }
                                 } else {
-                                    log.debug("No space. isFirst={}, startsWithSpace={}, isPunctuation={}, isCJK={}",
-                                            isFirst.get(), chunk.startsWith(" "),
-                                            isPunctuation(chunk.charAt(0)), isCJK(chunk.charAt(0)));
+                                    log.debug("First chunk or empty: [{}]", trimmedChunk);
                                 }
 
                                 isFirst.set(false);
 
-                                // Send as SSE event with TEXT_PLAIN to preserve spaces
+                                // Send as SSE event with explicit JSON wrapping
+                                // Wrap in a Map to force JSON encoding which preserves spaces
                                 emitter.send(SseEmitter.event()
-                                        .data(processedChunk, org.springframework.http.MediaType.TEXT_PLAIN));
+                                        .data(java.util.Map.of("chunk", processedChunk)));
 
                             } catch (IOException e) {
                                 log.error("Error sending SSE event", e);
@@ -75,7 +80,6 @@ public class AiController {
 
         return emitter;
     }
-
 
     /**
      * Check if character is Chinese, Japanese, or Korean

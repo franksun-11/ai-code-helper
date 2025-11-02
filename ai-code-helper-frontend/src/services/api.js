@@ -35,8 +35,22 @@ export function chatWithSSE(memoryId, message, onMessage, onError, onComplete) {
       console.log('Raw event.data:', JSON.stringify(data), '(length:', data.length + ')')
 
       if (data !== null && data !== undefined) {
-        // Backend sends TEXT_PLAIN, so event.data is the raw string with spaces preserved
-        onMessage(data)
+        // Backend sends JSON object with "chunk" field to preserve spaces
+        let actualData = data
+        try {
+          const parsed = JSON.parse(data)
+          // If it's an object with "chunk" field, extract it
+          if (parsed && typeof parsed === 'object' && 'chunk' in parsed) {
+            actualData = parsed.chunk
+          } else {
+            actualData = parsed
+          }
+        } catch (e) {
+          // If not valid JSON, use as-is
+          actualData = data
+        }
+        console.log('Parsed chunk:', JSON.stringify(actualData), '(length:', actualData.length + ')')
+        onMessage(actualData)
       }
     } catch (error) {
       console.error('Error processing SSE message:', error)
